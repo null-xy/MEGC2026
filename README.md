@@ -59,22 +59,38 @@ python -m pip install -e .
 The code expects external MEGC data and precomputed optical-flow files. For a
 clean reproduction, pass all paths explicitly instead of relying on defaults.
 
+In the examples below, use these placeholders:
+
+- `<REPO_ROOT>`
+  - Local path to this repository
+- `<DATA_ROOT>`
+  - Local path to the external MEGC data root used by the runner
+- `<TRAIN_JSONL>`
+  - Training VQA JSONL file
+- `<SAMPLE_ANSWER_DIR>`
+  - Directory containing the official test-set answer templates
+- `<QWEN25_7B_INSTRUCT_DIR>`
+  - Local directory of the downloaded `Qwen2.5-7B-Instruct` checkpoint
+
 Required inputs:
 
 - `--mame-dir`
-  - Root directory containing the cropped data and flow folders
+  - Root directory containing the cropped data and flow folders, referred to
+    below as `<DATA_ROOT>`
 - `--megc-jsonl`
-  - Training VQA JSONL file
+  - Training VQA JSONL file, referred to below as `<TRAIN_JSONL>`
 - `--sample-answer-dir`
-  - Directory containing the official test-set answer templates
+  - Directory containing the official test-set answer templates, referred to
+    below as `<SAMPLE_ANSWER_DIR>`
 - `--llm_directory`
-  - Local directory of the downloaded `Qwen2.5-7B-Instruct` checkpoint
+  - Local directory of the downloaded `Qwen2.5-7B-Instruct` checkpoint,
+    referred to below as `<QWEN25_7B_INSTRUCT_DIR>`
 
 The training/test assets are expected in the following layout under
-`--mame-dir`:
+`<DATA_ROOT>`:
 
 ```text
-<mame-dir>/
+<DATA_ROOT>/
   data/
     ME_VQA_MEGC_2025_Test_Crop_0329/
   trainset_flow/
@@ -93,7 +109,7 @@ Place `face_landmarker.task` either:
 Run all commands from this directory:
 
 ```powershell
-cd D:\thesis\mame\local_vllm_batch_runner\MEGC2026
+cd <REPO_ROOT>
 ```
 
 Install the package first:
@@ -109,9 +125,9 @@ CASME2:
 ```powershell
 local-vllm-batch-runner `
   --dataset casme2 `
-  --mame-dir <PATH_TO_MAME_ROOT> `
-  --megc-jsonl <PATH_TO_TRAIN_JSONL> `
-  --llm_directory <PATH_TO_QWEN25_7B_INSTRUCT>
+  --mame-dir <DATA_ROOT> `
+  --megc-jsonl <TRAIN_JSONL> `
+  --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
 SAMM:
@@ -119,9 +135,9 @@ SAMM:
 ```powershell
 local-vllm-batch-runner `
   --dataset samm `
-  --mame-dir <PATH_TO_MAME_ROOT> `
-  --megc-jsonl <PATH_TO_TRAIN_JSONL> `
-  --llm_directory <PATH_TO_QWEN25_7B_INSTRUCT>
+  --mame-dir <DATA_ROOT> `
+  --megc-jsonl <TRAIN_JSONL> `
+  --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
 These runs produce:
@@ -139,9 +155,9 @@ CASME2 LOSO:
 local-vllm-batch-runner `
   --dataset casme2 `
   --loso `
-  --mame-dir <PATH_TO_MAME_ROOT> `
-  --megc-jsonl <PATH_TO_TRAIN_JSONL> `
-  --llm_directory <PATH_TO_QWEN25_7B_INSTRUCT>
+  --mame-dir <DATA_ROOT> `
+  --megc-jsonl <TRAIN_JSONL> `
+  --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
 SAMM LOSO:
@@ -150,9 +166,9 @@ SAMM LOSO:
 local-vllm-batch-runner `
   --dataset samm `
   --loso `
-  --mame-dir <PATH_TO_MAME_ROOT> `
-  --megc-jsonl <PATH_TO_TRAIN_JSONL> `
-  --llm_directory <PATH_TO_QWEN25_7B_INSTRUCT>
+  --mame-dir <DATA_ROOT> `
+  --megc-jsonl <TRAIN_JSONL> `
+  --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
 Optional single-subject LOSO:
@@ -162,9 +178,9 @@ local-vllm-batch-runner `
   --dataset samm `
   --loso `
   --loso-subject 10 `
-  --mame-dir <PATH_TO_MAME_ROOT> `
-  --megc-jsonl <PATH_TO_TRAIN_JSONL> `
-  --llm_directory <PATH_TO_QWEN25_7B_INSTRUCT>
+  --mame-dir <DATA_ROOT> `
+  --megc-jsonl <TRAIN_JSONL> `
+  --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
 ### 3. Official Test-Set Submission Files
@@ -172,9 +188,9 @@ local-vllm-batch-runner `
 ```powershell
 local-vllm-batch-runner `
   --dataset testset `
-  --mame-dir <PATH_TO_MAME_ROOT> `
-  --sample-answer-dir <PATH_TO_SAMPLE_ANSWER_DIR> `
-  --llm_directory <PATH_TO_QWEN25_7B_INSTRUCT>
+  --mame-dir <DATA_ROOT> `
+  --sample-answer-dir <SAMPLE_ANSWER_DIR> `
+  --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
 This generates the leaderboard submission files:
@@ -196,7 +212,7 @@ local-vllm-evaluate `
 If you prefer the module form after installation, these are equivalent:
 
 ```powershell
-python -m local_vllm_batch_runner --dataset samm --mame-dir <PATH> --megc-jsonl <PATH> --llm_directory <PATH>
+python -m local_vllm_batch_runner --dataset samm --mame-dir <DATA_ROOT> --megc-jsonl <TRAIN_JSONL> --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 python -m local_vllm_batch_runner.evaluation --input outputs\batch_results_vqa_casme2.jsonl --input outputs\batch_results_vqa_samm.jsonl
 ```
 
