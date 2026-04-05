@@ -11,6 +11,16 @@ dependencies = [
   "vllm",
 ]
 
+[project.scripts]
+local-vllm-batch-runner = "local_vllm_batch_runner.batch_runner:main"
+local-vllm-evaluate = "local_vllm_batch_runner.evaluation:main"
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

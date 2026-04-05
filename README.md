@@ -6,12 +6,26 @@ batch pipeline with a local, text-only reasoning stack built around motion
 features, MediaPipe landmarks, and a frozen `Qwen2.5-7B-Instruct` model served
 through vLLM.
 
+## Project Layout
+
+```text
+MEGC2026/
+  src/local_vllm_batch_runner/
+    batch_runner.py
+    evaluation.py
+    ...
+  README.md
+  pyproject.toml
+  CHECKPOINT.md
+  RESULTS_SUMMARY.md
+```
+
 ## What This Repository Contains
 
 - Unified batch runner for `CASME2`, `SAMM`, and the official `MEGC` test set
 - Local feature extraction and calibration logic
 - Evaluation script for UF1/UAR/BLEU/ROUGE
-- Saved validation metrics and leaderboard JSONL outputs used for submission
+- Compact checkpoint and result notes for the accompanying submission
 
 ## Environment Requirements
 
@@ -32,6 +46,12 @@ Install the Python dependencies with:
 
 ```powershell
 python -m pip install mediapipe numpy pillow transformers vllm
+```
+
+For local development, install the package in editable mode:
+
+```powershell
+python -m pip install -e .
 ```
 
 ## External Data Expected By The Runner
@@ -73,7 +93,13 @@ Place `face_landmarker.task` either:
 Run all commands from this directory:
 
 ```powershell
-cd D:\thesis\mame\local_vllm_batch_runner
+cd D:\thesis\mame\local_vllm_batch_runner\MEGC2026
+```
+
+Install the package first:
+
+```powershell
+python -m pip install -e .
 ```
 
 ### 1. Full-Prior Validation Runs
@@ -81,7 +107,7 @@ cd D:\thesis\mame\local_vllm_batch_runner
 CASME2:
 
 ```powershell
-python batch_runner.py `
+local-vllm-batch-runner `
   --dataset casme2 `
   --mame-dir <PATH_TO_MAME_ROOT> `
   --megc-jsonl <PATH_TO_TRAIN_JSONL> `
@@ -91,7 +117,7 @@ python batch_runner.py `
 SAMM:
 
 ```powershell
-python batch_runner.py `
+local-vllm-batch-runner `
   --dataset samm `
   --mame-dir <PATH_TO_MAME_ROOT> `
   --megc-jsonl <PATH_TO_TRAIN_JSONL> `
@@ -110,7 +136,7 @@ These runs produce:
 CASME2 LOSO:
 
 ```powershell
-python batch_runner.py `
+local-vllm-batch-runner `
   --dataset casme2 `
   --loso `
   --mame-dir <PATH_TO_MAME_ROOT> `
@@ -121,7 +147,7 @@ python batch_runner.py `
 SAMM LOSO:
 
 ```powershell
-python batch_runner.py `
+local-vllm-batch-runner `
   --dataset samm `
   --loso `
   --mame-dir <PATH_TO_MAME_ROOT> `
@@ -132,7 +158,7 @@ python batch_runner.py `
 Optional single-subject LOSO:
 
 ```powershell
-python batch_runner.py `
+local-vllm-batch-runner `
   --dataset samm `
   --loso `
   --loso-subject 10 `
@@ -144,7 +170,7 @@ python batch_runner.py `
 ### 3. Official Test-Set Submission Files
 
 ```powershell
-python batch_runner.py `
+local-vllm-batch-runner `
   --dataset testset `
   --mame-dir <PATH_TO_MAME_ROOT> `
   --sample-answer-dir <PATH_TO_SAMPLE_ANSWER_DIR> `
@@ -161,10 +187,17 @@ This generates the leaderboard submission files:
 To recompute the validation metrics from the saved validation VQA outputs:
 
 ```powershell
-python evaluation.py `
+local-vllm-evaluate `
   --input outputs\batch_results_vqa_casme2.jsonl `
   --input outputs\batch_results_vqa_samm.jsonl `
   --json-out outputs\vqa_eval_metrics.json
+```
+
+If you prefer the module form after installation, these are equivalent:
+
+```powershell
+python -m local_vllm_batch_runner --dataset samm --mame-dir <PATH> --megc-jsonl <PATH> --llm_directory <PATH>
+python -m local_vllm_batch_runner.evaluation --input outputs\batch_results_vqa_casme2.jsonl --input outputs\batch_results_vqa_samm.jsonl
 ```
 
 The evaluation script reports:

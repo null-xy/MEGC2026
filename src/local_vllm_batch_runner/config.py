@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_MAME_DIR = Path(os.getenv("MAME_DIR", str(ROOT_DIR)))
 DEFAULT_MEGC_JSONL = Path(
     os.getenv(
