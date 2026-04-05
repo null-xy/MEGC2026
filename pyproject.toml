@@ -1,0 +1,16 @@
+[project]
+name = "local-vllm-batch-runner"
+version = "0.1.0"
+description = "Local vLLM batch runners for CASME2, SAMM, and MEGC test set."
+requires-python = ">=3.10"
+dependencies = [
+  "mediapipe",
+  "numpy",
+  "pillow",
+  "transformers",
+  "vllm",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

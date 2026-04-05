@@ -1,0 +1,10 @@
+.claude/
+__pycache__/
+outputs/
+Paper/
+runs/
+skills/
+memory/
+FG2026_Latex_template/
+submission_bundle/
+submission_bundle.zip
