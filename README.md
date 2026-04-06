@@ -1,95 +1,41 @@
 # Local vLLM Batch Runner
 
-This repository contains the local inference pipeline used for the MEGC VQA
-experiments in the accompanying paper. The system replaces the remote Gemini
-batch pipeline with a local, text-only reasoning stack built around motion
-features, MediaPipe landmarks, and a frozen `Qwen2.5-7B-Instruct` model served
+Local inference code for the MEGC VQA experiments. The pipeline uses
+motion/landmark features plus a frozen `Qwen2.5-7B-Instruct` model served
 through vLLM.
 
-## Project Layout
+## Setup
 
-```text
-MEGC2026/
-  scripts/
-    export_casme2_samm_motion_features.py
-  src/local_vllm_batch_runner/
-    batch_runner.py
-    evaluation.py
-    ...
-  README.md
-  pyproject.toml
-  CHECKPOINT.md
-  RESULTS_SUMMARY.md
-```
+Run from the repository root:
 
-## What This Repository Contains
-
-- Unified batch runner for `CASME2`, `SAMM`, and the official `MEGC` test set
-- Local feature extraction and calibration logic
-- Evaluation script for UF1/UAR/BLEU/ROUGE
-- Compact checkpoint and result notes for the accompanying submission
-
-## Environment Requirements
-
-- Python `>=3.10`
-- Packages:
-  - `mediapipe`
-  - `numpy`
-  - `pillow`
-  - `transformers`
-  - `vllm`
-- MediaPipe asset:
-  - `face_landmarker.task`
-- Local reasoning checkpoint:
-  - `Qwen/Qwen2.5-7B-Instruct`
-  - Download: <https://huggingface.co/Qwen/Qwen2.5-7B-Instruct>
-
-Install the Python dependencies with:
-
-```powershell
-python -m pip install mediapipe numpy pillow transformers vllm
-```
-
-For local development, install the package in editable mode:
-
-```powershell
+```bash
+cd <REPO_ROOT>
 python -m pip install -e .
 ```
 
-## External Data Expected By The Runner
+Download the MediaPipe Face Landmarker model to the repository root:
 
-The code expects external MEGC data and precomputed optical-flow files. For a
-clean reproduction, pass all paths explicitly instead of relying on defaults.
+```bash
+wget https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task \
+  -O face_landmarker.task
+```
 
-In the examples below, use these placeholders:
+Official task documentation: [Google AI Edge Face Landmarker for Python](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker/python)
 
-- `<REPO_ROOT>`
-  - Local path to this repository
-- `<DATA_ROOT>`
-  - Local path to the external MEGC data root used by the runner
-- `<TRAIN_JSONL>`
-  - Training VQA JSONL file
-- `<SAMPLE_ANSWER_DIR>`
-  - Directory containing the official test-set answer templates
-- `<QWEN25_7B_INSTRUCT_DIR>`
-  - Local directory of the downloaded `Qwen2.5-7B-Instruct` checkpoint
+Download the reasoning checkpoint separately:
 
-Required inputs:
+- `Qwen/Qwen2.5-7B-Instruct`
+- <https://huggingface.co/Qwen/Qwen2.5-7B-Instruct>
 
-- `--mame-dir`
-  - Root directory containing the cropped data and flow folders, referred to
-    below as `<DATA_ROOT>`
-- `--megc-jsonl`
-  - Training VQA JSONL file, referred to below as `<TRAIN_JSONL>`
-- `--sample-answer-dir`
-  - Directory containing the official test-set answer templates, referred to
-    below as `<SAMPLE_ANSWER_DIR>`
-- `--llm_directory`
-  - Local directory of the downloaded `Qwen2.5-7B-Instruct` checkpoint,
-    referred to below as `<QWEN25_7B_INSTRUCT_DIR>`
+## Expected Data
 
-The training/test assets are expected in the following layout under
-`<DATA_ROOT>`:
+Use explicit paths in all commands below:
+
+- `<DATA_ROOT>`: external MEGC data root
+- `<TRAIN_JSONL>`: merged training VQA JSONL
+- `<QWEN25_7B_INSTRUCT_DIR>`: local checkpoint directory
+
+Expected layout under `<DATA_ROOT>`:
 
 ```text
 <DATA_ROOT>/
@@ -101,129 +47,57 @@ The training/test assets are expected in the following layout under
     testset/
 ```
 
-Place `face_landmarker.task` either:
+## Export Features
 
-- in this repository directory, or
-- in the current working directory when running the scripts
+Generate the clip-level calibration features before running the main pipeline:
 
-## How To Run
-
-Run all commands from this directory:
-
-```powershell
-cd <REPO_ROOT>
+```bash
+python scripts/export_casme2_samm_motion_features.py \
+  --mame-dir <DATA_ROOT> \
+  --jsonl-path <TRAIN_JSONL> \
+  --model-path <REPO_ROOT>/face_landmarker.task \
+  --output-jsonl <REPO_ROOT>/outputs/casme2_samm_motion_features.jsonl \
+  --output-csv <REPO_ROOT>/outputs/casme2_samm_motion_features.csv
 ```
 
-Install the package first:
+## Run Validation
 
-```powershell
-python -m pip install -e .
-```
+Full-prior CASME2:
 
-### 0. Export Motion Features For Calibration
-
-Before running the main batch runner, generate the clip-level motion-feature
-file used by the calibration logic:
-
-```powershell
-python scripts\export_casme2_samm_motion_features.py `
-  --mame-dir <DATA_ROOT> `
-  --jsonl-path <TRAIN_JSONL> `
-  --model-path <REPO_ROOT>\face_landmarker.task `
-  --output-jsonl <REPO_ROOT>\outputs\casme2_samm_motion_features.jsonl `
-  --output-csv <REPO_ROOT>\outputs\casme2_samm_motion_features.csv
-```
-
-This step produces the calibration feature file expected by the runner:
-
-- `outputs/casme2_samm_motion_features.jsonl`
-
-### 1. Full-Prior Validation Runs
-
-CASME2:
-
-```powershell
-local-vllm-batch-runner `
-  --dataset casme2 `
-  --mame-dir <DATA_ROOT> `
-  --megc-jsonl <TRAIN_JSONL> `
+```bash
+local-vllm-batch-runner \
+  --dataset casme2 \
+  --mame-dir <DATA_ROOT> \
+  --megc-jsonl <TRAIN_JSONL> \
   --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
-SAMM:
+Full-prior SAMM:
 
-```powershell
-local-vllm-batch-runner `
-  --dataset samm `
-  --mame-dir <DATA_ROOT> `
-  --megc-jsonl <TRAIN_JSONL> `
+```bash
+local-vllm-batch-runner \
+  --dataset samm \
+  --mame-dir <DATA_ROOT> \
+  --megc-jsonl <TRAIN_JSONL> \
   --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
-These runs produce:
+LOSO example:
 
-- `outputs/batch_results_casme2.jsonl`
-- `outputs/batch_results_samm.jsonl`
-- `outputs/batch_results_vqa_casme2.jsonl`
-- `outputs/batch_results_vqa_samm.jsonl`
-
-### 2. LOSO Validation
-
-CASME2 LOSO:
-
-```powershell
-local-vllm-batch-runner `
-  --dataset casme2 `
-  --loso `
-  --mame-dir <DATA_ROOT> `
-  --megc-jsonl <TRAIN_JSONL> `
+```bash
+local-vllm-batch-runner \
+  --dataset samm \
+  --loso \
+  --loso-subject 10 \
+  --mame-dir <DATA_ROOT> \
+  --megc-jsonl <TRAIN_JSONL> \
   --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
-SAMM LOSO:
+## Included Here
 
-```powershell
-local-vllm-batch-runner `
-  --dataset samm `
-  --loso `
-  --mame-dir <DATA_ROOT> `
-  --megc-jsonl <TRAIN_JSONL> `
-  --llm_directory <QWEN25_7B_INSTRUCT_DIR>
-```
-
-Optional single-subject LOSO:
-
-```powershell
-local-vllm-batch-runner `
-  --dataset samm `
-  --loso `
-  --loso-subject 10 `
-  --mame-dir <DATA_ROOT> `
-  --megc-jsonl <TRAIN_JSONL> `
-  --llm_directory <QWEN25_7B_INSTRUCT_DIR>
-```
-
-## Repository Scope
-
-This GitHub repository is intended to stay focused on the runnable codebase and
-the core documentation needed for verification.
-
-Included here:
-
-- the inference and evaluation code
+- source code under `src/local_vllm_batch_runner/`
+- feature export script under `scripts/`
 - dependency metadata in `pyproject.toml`
-- the main reproduction guide in `README.md`
-- a compact checkpoint note in `CHECKPOINT.md`
-- a compact result summary in `RESULTS_SUMMARY.md`
-
-Large result dumps, submission JSONL files, and paper artifacts are better kept
-in the supplementary ZIP rather than in the code repository itself.
-
-## Notes
-
-- The current local pipeline is text-only at inference time; the vision encoder
-  is not used in the submitted configuration.
-- The repository snapshot includes saved result files used to prepare the paper
-  and supplementary materials.
-- If you move the repository to a different workspace, prefer explicit path
-  arguments for `--mame-dir`, `--megc-jsonl`, and `--sample-answer-dir`.
+- checkpoint note in `CHECKPOINT.md`
+- result summary in `RESULTS_SUMMARY.md`
