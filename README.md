@@ -13,6 +13,8 @@ cd <REPO_ROOT>
 python -m pip install -e .
 ```
 
+The optical-flow preprocessing uses OpenCV TV-L1 via `opencv-contrib-python`.
+
 Download the MediaPipe Face Landmarker model to the repository root:
 
 ```bash
@@ -33,6 +35,11 @@ Use explicit paths in all commands below:
 
 - `<DATA_ROOT>`: external MEGC data root
 - `<TRAIN_JSONL>`: merged training VQA JSONL
+- `<SAMM_ROOT>`: raw SAMM cropped-frame root
+- `<CASME2_ROOT>`: raw CASME II frame root
+- `<SAMM_ANNO_XLSX>`: SAMM annotation spreadsheet
+- `<CASME2_ANNO_XLSX>`: CASME II annotation spreadsheet
+- `<TESTSET_CROP_ROOT>`: cropped test-set root containing `selected_frames/`
 - `<QWEN25_7B_INSTRUCT_DIR>`: local checkpoint directory
 
 Expected layout under `<DATA_ROOT>`:
@@ -58,6 +65,29 @@ python scripts/export_casme2_samm_motion_features.py \
   --model-path <REPO_ROOT>/face_landmarker.task \
   --output-jsonl <REPO_ROOT>/outputs/casme2_samm_motion_features.jsonl \
   --output-csv <REPO_ROOT>/outputs/casme2_samm_motion_features.csv
+```
+
+## Prepare Optical Flow
+
+Generate trainset TV-L1 flow in the directory layout expected by the runner:
+
+```bash
+python scripts/generate_trainset_flow.py \
+  --jsonl <TRAIN_JSONL> \
+  --samm-root <SAMM_ROOT> \
+  --casme2-root <CASME2_ROOT> \
+  --samm-anno <SAMM_ANNO_XLSX> \
+  --casme2-anno <CASME2_ANNO_XLSX> \
+  --output-root <DATA_ROOT>/trainset_flow
+```
+
+Generate test-set flow from the cropped `selected_frames/` layout:
+
+```bash
+python scripts/generate_testset_flow_from_crops.py \
+  --input <TESTSET_CROP_ROOT> \
+  --output-root <DATA_ROOT>/trainset_flow/testset \
+  --image-size 224
 ```
 
 ## Run Validation
