@@ -183,48 +183,6 @@ local-vllm-batch-runner `
   --llm_directory <QWEN25_7B_INSTRUCT_DIR>
 ```
 
-### 3. Official Test-Set Submission Files
-
-```powershell
-local-vllm-batch-runner `
-  --dataset testset `
-  --mame-dir <DATA_ROOT> `
-  --sample-answer-dir <SAMPLE_ANSWER_DIR> `
-  --llm_directory <QWEN25_7B_INSTRUCT_DIR>
-```
-
-This generates the leaderboard submission files:
-
-- `me_vqa_casme3_v2_test_pred.jsonl`
-- `me_vqa_samm_v2_test_pred.jsonl`
-
-## Evaluation
-
-To recompute the validation metrics from the saved validation VQA outputs:
-
-```powershell
-local-vllm-evaluate `
-  --input outputs\batch_results_vqa_casme2.jsonl `
-  --input outputs\batch_results_vqa_samm.jsonl `
-  --json-out outputs\vqa_eval_metrics.json
-```
-
-If you prefer the module form after installation, these are equivalent:
-
-```powershell
-python -m local_vllm_batch_runner --dataset samm --mame-dir <DATA_ROOT> --megc-jsonl <TRAIN_JSONL> --llm_directory <QWEN25_7B_INSTRUCT_DIR>
-python -m local_vllm_batch_runner.evaluation --input outputs\batch_results_vqa_casme2.jsonl --input outputs\batch_results_vqa_samm.jsonl
-```
-
-The evaluation script reports:
-
-- UF1 Coarse
-- UAR Coarse
-- UF1 Fine-Grained
-- UAR Fine-Grained
-- BLEU
-- ROUGE
-
 ## Repository Scope
 
 This GitHub repository is intended to stay focused on the runnable codebase and
