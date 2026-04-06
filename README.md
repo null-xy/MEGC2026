@@ -10,6 +10,8 @@ through vLLM.
 
 ```text
 MEGC2026/
+  scripts/
+    export_casme2_samm_motion_features.py
   src/local_vllm_batch_runner/
     batch_runner.py
     evaluation.py
@@ -117,6 +119,24 @@ Install the package first:
 ```powershell
 python -m pip install -e .
 ```
+
+### 0. Export Motion Features For Calibration
+
+Before running the main batch runner, generate the clip-level motion-feature
+file used by the calibration logic:
+
+```powershell
+python scripts\export_casme2_samm_motion_features.py `
+  --mame-dir <DATA_ROOT> `
+  --jsonl-path <TRAIN_JSONL> `
+  --model-path <REPO_ROOT>\face_landmarker.task `
+  --output-jsonl <REPO_ROOT>\outputs\casme2_samm_motion_features.jsonl `
+  --output-csv <REPO_ROOT>\outputs\casme2_samm_motion_features.csv
+```
+
+This step produces the calibration feature file expected by the runner:
+
+- `outputs/casme2_samm_motion_features.jsonl`
 
 ### 1. Full-Prior Validation Runs
 
