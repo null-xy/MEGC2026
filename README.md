@@ -130,4 +130,3 @@ local-vllm-batch-runner \
 - feature export script under `scripts/`
 - dependency metadata in `pyproject.toml`
 - checkpoint note in `CHECKPOINT.md`
-- result summary in `RESULTS_SUMMARY.md`
